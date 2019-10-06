@@ -44,6 +44,17 @@ The first step in this problem is just getting the sequence.</description>
     </item>
     
     <item>
+      <title>Open Powerlifting EDA</title>
+      <link>/2019/10/06/2019-10-06-open-powerlifting-eda/</link>
+      <pubDate>Sun, 06 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/10/06/2019-10-06-open-powerlifting-eda/</guid>
+      <description>Stronger by Science I recently read this blog post by Greg Nuckols on his blog, Stronger by Science, which compares trends in strength improvments across powerlifters for the last 30 or so years. The main points of the article are all really interesting but what interested me the most was the dataset he used: The OpenPowerlifting dataset.
+The OpenPowerlifting project:
+ …aims to create a permanent, accurate, convenient, accessible, open archive of the world’s powerlifting data.</description>
+    </item>
+    
+    <item>
       <title>About</title>
       <link>/page/about/</link>
       <pubDate>Fri, 03 Apr 2015 02:13:50 +0000</pubDate>

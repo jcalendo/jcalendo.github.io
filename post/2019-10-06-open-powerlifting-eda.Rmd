@@ -1,0 +1,302 @@
+---
+title: Open Powerlifting EDA
+author: Gennaro Calendo
+date: '2019-10-06'
+slug: open-powerlifting-eda
+categories:
+  - R
+  - Exploratory Data Analysis
+  - Powerlifting
+tags: []
+description: ''
+---
+
+## Stronger by Science
+
+I recently read this blog post by Greg Nuckols on his blog, Stronger by Science, which compares trends in strength improvments across powerlifters for the last 30 or so years. The main points of the article are all really interesting but what interested me the most was the dataset he used: The OpenPowerlifting dataset.
+
+The OpenPowerlifting project:
+
+> …aims to create a permanent, accurate, convenient, accessible, open archive of the world’s powerlifting data.
+
+I had no idea that someone (well, many people) had collected and curated powerlifting data. As someone who interested in strength sports in general I thought it would be interesting to take a look at this dataset and see if I can come to the same conclusions that Greg Nuckols did in his blog or better yet, derive additional insights from the data. In this blog post I wish to perform a simple exploratory data analysis of the OpenPowerlifting dataset.
+Attribution
+
+This page uses data from the OpenPowerlifting project, https://www.openpowerlifting.org. You may download a copy of the data at https://gitlab.com/openpowerlifting/opl-data.
+
+## Load the Necessary Libraries
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+```
+
+## Download and Read in the Dataset
+
+```{r}
+data_file <- "~/Downloads/openpowerlifting-2019-09-20/openpowerlifting-2019-09-20.csv"
+raw_data <- read_csv(data_file)
+```
+
+`read_csv` returned a few problems. We can use the `problems()` function with the raw_data object to see what these are. As a quick test, instead of printing all of the problems to the screen, we can just count the number of occurences of problems for each column type. Since problems() returns a tibble this is easy to explore.
+
+```{r}
+problems(raw_data) %>% 
+  count(col)
+```
+
+The Date column and the Tested columns contain the errors. The vast majority of the errors though are in the Tested column. From the warning above we can see that the Tested column was expecting to read in a logical value but received a character value. The error occurs because the first 1000 rows of the dataset contain NAs for the Tested value. `readr` interprets this as a logical value. We can fix this by changing the guess_min argument or directly specifying the column types when we read in the data. Since we have the data dictionary in the README.txt file maybe it is best to read in the data and define the types ourselves.
+
+At the outset, this seems like a fairly tedious thing to do considering there are so many columns, however, I like to use a little copy-paste trick using the spec() function. Since readr read in most of the columns correctly we can copy the spec() output and just change the columns in question.
+
+```{r}
+spec(raw_data)
+```
+
+And since we also have the data dictionary stored in the unzipped folder, we can apply appropriate factor labels while we’re at it.
+
+```{r}
+readme <- "~/Downloads/openpowerlifting-2019-09-20/README.txt"
+#file.show(readme)
+```
+
+The file.show() function will display the README text in a new window when the command is run. For simplicity, just refer to this resource taken from the readme itself:
+
+>For a rendered version of this document, view the README on GitLab.
+
+Now we can read in the dataset using the correct columns and specifying the correct datatypes.
+
+```{r}
+raw_data2 <- read_csv(data_file,
+                      col_types = cols(Name = col_character(),
+                                      Sex = col_factor(levels = c("M", "F")),
+                                      Event = col_factor(levels = c("SBD", "BD", "SD", "SB", "S", "B", "D")),
+                                      Equipment = col_factor(levels = c("Raw", "Wraps", "Single-ply", "Multi-ply", "Straps")),
+                                      Age = col_double(),
+                                      AgeClass = col_factor(levels = c("5-12", "13-15", "16-17", "18-19", "20-23", "24-34", "35-39", "40-44",
+                                                                       "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-999"),
+                                                            ordered = TRUE),
+                                      Division = col_character(),
+                                      BodyweightKg = col_double(),
+                                      WeightClassKg = col_character(),
+                                      Squat1Kg = col_double(),
+                                      Squat2Kg = col_double(),
+                                      Squat3Kg = col_double(),
+                                      Squat4Kg = col_double(),
+                                      Best3SquatKg = col_double(),
+                                      Bench1Kg = col_double(),
+                                      Bench2Kg = col_double(),
+                                      Bench3Kg = col_double(),
+                                      Bench4Kg = col_double(),
+                                      Best3BenchKg = col_double(),
+                                      Deadlift1Kg = col_double(),
+                                      Deadlift2Kg = col_double(),
+                                      Deadlift3Kg = col_double(),
+                                      Deadlift4Kg = col_double(),
+                                      Best3DeadliftKg = col_double(),
+                                      TotalKg = col_double(),
+                                      Place = col_factor(),
+                                      Wilks = col_double(),
+                                      McCulloch = col_double(),
+                                      Glossbrenner = col_double(),
+                                      IPFPoints = col_double(),
+                                      Tested = col_factor(levels = c("Yes")),
+                                      Country = col_character(),
+                                      Federation = col_character(),
+                                      Date = col_date(format = ""),
+                                      MeetCountry = col_character(),
+                                      MeetState = col_character(),
+                                      MeetName = col_character()
+                                    )
+                      )
+```
+
+Oh no, we still have problems. 15 of the dates aren’t valid dates. The format is correct but those days never happened. April has 30 days…
+
+```{r}
+problems(raw_data2) %>% 
+  select(actual) %>% 
+  unique()
+```
+
+The exact date is probably not important at all for any type of analysis we’ll do so we can probably just ignore this error, however, it is important to note that these dates need to be corrected. Let’s change these dates simply to the last day of the month.
+
+Let’s use the MeetName to determine the corrections we will apply to the dataset. Since we know the date was parse incorrectly it's value will be `NA` therefore we can select the MeetName where the Date is NA.
+
+```{r}
+raw_data2 %>% 
+  select(Date, MeetName) %>% 
+  filter(is.na(Date)) %>% 
+  count(MeetName)
+```
+
+We have to correct one Date and we have the MeetName which occured on that Date. Checking the raw_data, we can see that the Shimanovsky Cup was said to have occured on 2018-04-31.
+
+Now we can clean up the Date for the missing meets by making those dates the last day of the month.
+
+The reason I am getting the row index from the problems() tibble is because we don’t know that there aren’t any other Meets with the same name. If we were to use a case_when() on the MeetName as a condition instead of indexing the rows directly, we could overwrite valid dates of Meets with the same name that happened to occur in different years.
+
+```{r}
+shimanovsky_rows <- problems(raw_data2) %>% 
+  filter(actual == "2018-04-31") %>% 
+  pull(row)
+
+raw_data2[shimanovsky_rows, "Date"] <- as.Date("2018-04-30")
+```
+
+## Start Exploring
+
+### Cleaning up and Allometric Scaling
+
+There are many columns we won’t be using so let’s first clean the data up a bit by removing some columns and checking the validity of the data in the others. We’ll also just extract the year from the Date variable since the exact date is not too important for the purpose of this analysis. In addition to extracting the year, the original article used an allometric scaling to provide an estimate of the lifter’s strength. Allometric scaling attempts to capture relative strength by adjusting for the lifter’s strength as size increases. This relationship has a slope of about ~(-2/3). We can apply allometric scaling by multiplying the weigth lifted by the lifter’s bodyweight taken to the (-2/3) power.
+
+```{r}
+df <- raw_data2 %>% 
+  select(Federation, Division, Tested, BodyweightKg, WeightClassKg, Date, AgeClass, Equipment, Sex, Age, 
+         TotalKg, Best3SquatKg, Best3BenchKg, Best3DeadliftKg, Wilks) %>% 
+  mutate(Year = year(Date),
+         AllometricTotal = TotalKg * BodyweightKg ^ (-2/3),
+         AllometricSquat = Best3SquatKg * BodyweightKg ^ (-2/3),
+         AllometricBench = Best3BenchKg * BodyweightKg ^ (-2/3),
+         AllometricDeadlift = Best3DeadliftKg * BodyweightKg ^ (-2/3)) %>% 
+  select(-Date)
+
+glimpse(df)
+```
+
+Now we can try to recreate one of the original plots. In the article, Greg Nuckols uses data from the USAPL Federation only selecting lifters who lifted in the Open Division using Raw Equipment. At the time the article was written (2016) he also used the last 4 years worth of data. He states:
+
+>For the purposes of this article, I’m only looking at the raw, open class results – with 7,444 discrete results for men and 4,844 for women over the past 4 years…
+
+Let’s see if the counts match up.
+
+```{r}
+df %>% 
+  filter(Federation == "USAPL",
+         str_detect(Division, "O|Open"),
+         Equipment == "Raw",
+         between(Year, 2013, 2016),
+         !is.na(AllometricTotal),
+         !is.na(AllometricSquat),
+         !is.na(AllometricBench),
+         !is.na(AllometricDeadlift)) %>% 
+  count(Sex)
+```
+
+So there are slightly more data points now than when the original article was published. This could just be because more data has been added for those Years since the publication date. Regardless, let’s see if we can replicate the plot.
+
+First we’ll filter for all of the variables of interest, then group_by and summarize the mean Allometric value for each lift, and finally reshape the data so we can recreate the plot. I’ll add errorbars to the original plot as well.
+
+```{r}
+library(ggthemes)
+
+
+df_means <- df %>% 
+  filter(Federation == "USAPL",
+         str_detect(Division, "O|Open"),
+         Equipment == "Raw",
+         between(Year, 2013, 2016)) %>% 
+  group_by(Year, Sex) %>% 
+  summarize(`Squat` = mean(AllometricSquat, na.rm = TRUE),
+            `Bench` = mean(AllometricBench, na.rm = TRUE),
+            `DL` = mean(AllometricDeadlift, na.rm = TRUE),
+            `Total` = mean(AllometricTotal, na.rm = TRUE)) %>% 
+  gather("Lift", "Mean", c(-Year, -Sex))
+
+# calculate the standard deviations
+df_sds <- df %>% 
+  filter(Federation == "USAPL",
+         str_detect(Division, "O|Open"),
+         Equipment == "Raw",
+         between(Year, 2013, 2016)) %>% 
+  group_by(Year, Sex) %>% 
+  summarize(Squat = sd(AllometricSquat, na.rm = TRUE),
+            Bench = sd(AllometricBench, na.rm = TRUE),
+            DL = sd(AllometricDeadlift, na.rm = TRUE),
+            Total = sd(AllometricTotal, na.rm = TRUE)) %>% 
+  gather("Lift", "stdev", c(-Year, -Sex))
+
+# Join the two dataframes
+df_plt1 <- inner_join(df_means, df_sds, by = c("Year", "Sex", "Lift")) %>% 
+  mutate(Lift = factor(Lift, levels = c("Squat", "Bench", "DL", "Total")))
+
+# recreate the plot
+ggplot(df_plt1, aes(Lift, Mean, fill = factor(Year))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = Mean - stdev, ymax = Mean + stdev), 
+                width = 0.2, 
+                position = position_dodge(0.9)) +
+  facet_grid(Sex ~ .) +
+  labs(title = "Average Allometrically Scaled Strength, USAPL, 2013-2016",
+       subtitle = "Mean \u00B1 sd",
+       x = element_blank(),
+       y = "relative strength (allometrically scaled)") +
+  guides(fill = guide_legend(title = NULL)) +
+  theme_calc() +
+  scale_fill_manual(values = c("blue", "red", "orange", "green4"))
+```
+
+This doesn’t look too bad as far as replicating the original plot and the general trend seems to hold even with the new data - lifters haven’t changed much over the years when you look at their relative strength. However, let’s see if this hasn’t changed in more recent years.
+Plotting Allometric Strength to the Present
+
+Let’s slightly adjust our filters to include data until now and create a scatter/line plot instead of a bar plot. A bar plot could get too messy if we start adding bars for every year in the dataset. The scatter plot will also show the number of observations each year. This is important since powerlifting has been rising in popularity over recent years and thus we would expect the extreme results, i.e. lifters beating world records, to rise just as a result of more people entering competitions.
+
+```{r}
+df_plt2 <- df %>% 
+  filter(Federation == "USAPL",
+         str_detect(Division, "O|Open"),
+         Equipment == "Raw",
+         between(Year, 2013, 2019),
+         !is.na(AllometricTotal),
+         !is.na(AllometricSquat),
+         !is.na(AllometricBench),
+         !is.na(AllometricDeadlift))
+
+ggplot(df_plt2, aes(x = Year, y = AllometricTotal)) +
+  geom_jitter(alpha = 0.02) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~Sex) +
+  labs(title = "Allometrically Scaled Total Since 2013",
+       subtitle = "lm = Total ~ Year",
+       x = "Year",
+       y = "relative strength (allometrically scaled)") +
+  theme_calc()
+```
+
+The plot is somewhat busy but shows that generally things are staying the same. Let’s check the simple linear model that was fit.
+
+```{r}
+# filter dataframes into each sex
+male_df <- df_plt2 %>% filter(Sex == "M")
+female_df <- df_plt2 %>% filter(Sex == "F")
+
+# create linear models
+male_mod <- lm(AllometricTotal ~ Year, data = male_df)
+female_mod <- lm(AllometricTotal ~ Year, data = female_df)
+
+# summarize the models
+summary(male_mod)
+summary(female_mod)
+```
+
+The slopes for both plots are significantly non-zero however the \(R^2\) values really don’t explain any of the variation observed in either dataset. So there is some relationship between years and the allometrically scaled strength. The models predict that for every additional year we expect the average male to show a 0.16 scaled strength increase. Likewise, for every additional year we expect the average female to show a 0.11 scaled strength increase.
+
+However… If Year hardly explains the variation in the dataset for either males or females I think we’re safe in saying that powerlifters haven’t gotten stronger on average over the last 6 or so years solely using Year as a predictor. The significance in the slopes could just be a result of more data being added every year. We can check this out as well by simply plotting the counts per year.
+
+```{r}
+df_plt2 %>% 
+  count(Year, Sex) %>% 
+  ggplot(aes(Year, y = n, fill = Sex)) +
+    geom_col(position = "dodge") +
+    labs(title = "Count of Data Points per Year",
+         x = "Year",
+         y = "Count") +
+    scale_x_continuous(breaks = c(seq(2013, 2019, 1))) +
+    theme_calc()
+```
+
+### More to come
+
+This is a really interesting dataset to explore. I’ll come back to it in the future but for now we have at least one take away and that is, the average powerlifter has changed much over the years however the talent pool is getting much bigger. With a larger talent pool we are more likely to observe individuals lifting higher totals.
+
