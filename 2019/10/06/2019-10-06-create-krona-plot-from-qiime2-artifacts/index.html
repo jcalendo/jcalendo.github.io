@@ -210,22 +210,22 @@ split_taxon_df &lt;- complete_df %&gt;%
 <pre><code class="language-r">gut_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;gut&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/gut-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;gut-krona.tsv&quot;, col_names = FALSE)
 
 lpalm_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;left palm&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/left-palm-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;left-palm-krona.tsv&quot;, col_names = FALSE)
 
 rpalm_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;right palm&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/right-palm-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;right-palm-krona.tsv&quot;, col_names = FALSE)
 
 tongue_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;tongue&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/tongue-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;tongue-krona.tsv&quot;, col_names = FALSE)
 </code></pre>
 
 <h2 id="9-use-the-tsv-files-as-input-to-ktimporttext">9. Use the tsv files as input to ktImportText</h2>
@@ -298,22 +298,22 @@ split_taxon_df &lt;- complete_df %&gt;%
 gut_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;gut&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/gut-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;gut-krona.tsv&quot;, col_names = FALSE)
 
 lpalm_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;left palm&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/left-palm-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;left-palm-krona.tsv&quot;, col_names = FALSE)
 
 rpalm_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;right palm&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/right-palm-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;right-palm-krona.tsv&quot;, col_names = FALSE)
 
 tongue_df &lt;- split_taxon_df %&gt;% 
   filter(BodySite == &quot;tongue&quot;) %&gt;% 
   select(count, Kingdom:Species) %&gt;% 
-  write_tsv(&quot;../../static/data/tongue-krona.tsv&quot;, col_names = FALSE)
+  write_tsv(&quot;tongue-krona.tsv&quot;, col_names = FALSE)
 </code></pre>
 
 </div>
