@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Gennaro Calendo</copyright>
-    <lastBuildDate>Fri, 03 Apr 2015 02:13:50 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 06 Oct 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Create Krona Plot from Qiime2 Artifacts</title>
+      <link>/2019/10/06/2019-10-06-create-krona-plot-from-qiime2-artifacts/</link>
+      <pubDate>Sun, 06 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/10/06/2019-10-06-create-krona-plot-from-qiime2-artifacts/</guid>
+      <description>Krona is a wonderful tool for interactively visualizing metagenomic samples. If you are using Qiime2 however, shaping your data into a format that can be used by Krona is not entirely straight-forward. Below, I hope to explain my workflow for creating Krona charts derived from a Qiime2 workflow. I will use the example files from the Qiime2 Moving Pictures Tutorial to show how a krona chart can be constructed from these QIIME2 artifacts.</description>
+    </item>
     
     <item>
       <title>About</title>

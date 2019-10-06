@@ -1,0 +1,37 @@
+---
+title: Creating Krona Plots from Qiime2 files
+author: Gennaro Calendo
+date: '2019-10-06'
+slug: creating-krona-plot-from-qiime2-files
+categories:
+  - QIIME2
+  - Krona
+  - R
+tags: []
+description: ''
+---
+
+[Krona](https://github.com/marbl/Krona) is a wonderful tool for interactively visualizing metagenomic samples. If you are using Qiime2 however, shaping your data into a format that can be used by Krona is not entirely straight-forward. Below, I hope to explain my workflow for creating Krona charts derived from a Qiime2 workflow. I will use the example files from the [Qiime2 Moving Pictures Tutorial](https://docs.qiime2.org/2018.11/tutorials/moving-pictures/) to show how a krona chart can be constructed from these QIIME2 artifacts.
+
+## Preliminary Steps:
+
+### Download table.qza, taxonomy.qza and sample metadata files
+
+- [sample metadata](https://data.qiime2.org/2018.11/tutorials/moving-pictures/sample_metadata.tsv)
+- [feature table](https://docs.qiime2.org/2018.11/data/tutorials/moving-pictures/table.qza)
+- [taxonomy](https://docs.qiime2.org/2018.11/data/tutorials/moving-pictures/taxonomy.qza)
+
+*Alternatively…*
+
+You could also download the .csv file available after creating and viewing the `taxa barplot` visualization. This csv file will contain all of the counts for every annotated ASV as well as the metadata, which is essentially what we will create using the artifacts above. 
+
+### Install the necessary libraries
+
+We will also need:
+
+- `dplyr` (imported with `tidyverse` below)
+- [Qiime2R](https://github.com/jbisanz/qiime2R) to easily extract data from the artifact files
+- and [KronaTools](https://github.com/marbl/Krona/wiki/KronaTools) to create the Krona plots
+
+---
+

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Creating Krona Plots from Qiime2 files &middot; Gennaro Calendo</title>
+        <meta name="description" content="Krona is a wonderful tool for interactively visualizing metagenomic samples. If you are using Qiime2 however, shaping your data into a format that can be used by Krona is not entirely straight-forward. Below, I hope to explain my workflow for creating Krona charts derived from a Qiime2 workflow. I will use the example files from the Qiime2 Moving Pictures Tutorial to show how a krona chart can be constructed from these QIIME2 artifacts.">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.58.3" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta property="og:title" content="Creating Krona Plots from Qiime2 files">
+<meta property="og:description" content="Krona is a wonderful tool for interactively visualizing metagenomic samples. If you are using Qiime2 however, shaping your data into a format that can be used by Krona is not entirely straight-forward. Below, I hope to explain my workflow for creating Krona charts derived from a Qiime2 workflow. I will use the example files from the Qiime2 Moving Pictures Tutorial to show how a krona chart can be constructed from these QIIME2 artifacts.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/2019/10/06/2019-10-06-creating-krona-plot-from-qiime2-files/">
+        <link rel="stylesheet" href="/dist/styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        
+        
+        
+    </head>
+    <body>
+        
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                            </h1>
+                        
+                        <a class="button-square" href="/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/jcalendo" rel="me">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="LinkedIn" title="LinkedIn" href="https://linkedin.com/in/gennaro-calendo/" rel="me">
+                                <i class="fa fa-linkedin"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Email" title="Email" href="mailto:jcalendo@gmail.com">
+                                <i class="fa fa-envelope"></i>
+                            </a>
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Contact" href="/page/contact/">Contact</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/page/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Creating Krona Plots from Qiime2 files</h1>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2019-10-06" itemprop="datePublished">Sun, Oct 6, 2019</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="https://schema.org/Person">
+            <span itemprop="name">
+                <a href="https://github.com/jcalendo" itemprop="url" rel="author">Gennaro Calendo</a>
+            </span>
+        </span>
+    </p>
+    
+        <p class="post-reading post-line">
+            <span>Estimated reading time: 1 min</span>
+        </p>
+    
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+
+<p><a href="https://github.com/marbl/Krona">Krona</a> is a wonderful tool for interactively visualizing metagenomic samples. If you are using Qiime2 however, shaping your data into a format that can be used by Krona is not entirely straight-forward. Below, I hope to explain my workflow for creating Krona charts derived from a Qiime2 workflow. I will use the example files from the <a href="https://docs.qiime2.org/2018.11/tutorials/moving-pictures/">Qiime2 Moving Pictures Tutorial</a> to show how a krona chart can be constructed from these QIIME2 artifacts.</p>
+<div id="preliminary-steps" class="section level2">
+<h2>Preliminary Steps:</h2>
+<div id="download-table.qza-taxonomy.qza-and-sample-metadata-files" class="section level3">
+<h3>Download table.qza, taxonomy.qza and sample metadata files</h3>
+<ul>
+<li><a href="https://data.qiime2.org/2018.11/tutorials/moving-pictures/sample_metadata.tsv">sample metadata</a></li>
+<li><a href="https://docs.qiime2.org/2018.11/data/tutorials/moving-pictures/table.qza">feature table</a></li>
+<li><a href="https://docs.qiime2.org/2018.11/data/tutorials/moving-pictures/taxonomy.qza">taxonomy</a></li>
+</ul>
+<p><em>Alternatively…</em></p>
+<p>You could also download the .csv file available after creating and viewing the <code>taxa barplot</code> visualization. This csv file will contain all of the counts for every annotated ASV as well as the metadata, which is essentially what we will create using the artifacts above.</p>
+</div>
+<div id="install-the-necessary-libraries" class="section level3">
+<h3>Install the necessary libraries</h3>
+<p>We will also need:</p>
+<ul>
+<li><code>dplyr</code> (imported with <code>tidyverse</code> below)</li>
+<li><a href="https://github.com/jbisanz/qiime2R">Qiime2R</a> to easily extract data from the artifact files</li>
+<li>and <a href="https://github.com/marbl/Krona/wiki/KronaTools">KronaTools</a> to create the Krona plots</li>
+</ul>
+<hr />
+</div>
+</div>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+
+    <div class="share">
+        
+            <a class="icon-twitter" href="https://twitter.com/share?text=Creating%20Krona%20Plots%20from%20Qiime2%20files&url=%2f2019%2f10%2f06%2f2019-10-06-creating-krona-plot-from-qiime2-files%2f"
+                onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                <i class="fa fa-twitter"></i>
+                <span class="hidden">Twitter</span>
+            </a>
+        
+
+        
+            <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=%2f2019%2f10%2f06%2f2019-10-06-creating-krona-plot-from-qiime2-files%2f"
+                onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                <i class="fa fa-facebook"></i>
+                <span class="hidden">Facebook</span>
+            </a>
+        
+
+        
+            <a class="icon-google-plus" href="https://plus.google.com/share?url=%2f2019%2f10%2f06%2f2019-10-06-creating-krona-plot-from-qiime2-files%2f"
+              onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+              <i class="fa fa-google-plus"></i>
+                <span class="hidden">Google+</span>
+            </a>
+        
+        
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2019 / Powered by <a href="https://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="/js/jquery-1.11.3.min.js"></script>
+        <script src="/js/jquery.fitvids.js"></script>
+        
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        
+        
+        <script src="/js/scripts.js"></script>
+    </body>
+</html>
+
