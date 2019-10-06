@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Estimating K-mer Probabilities &middot; Gennaro Calendo</title>
+        <meta name="description" content="Estimating k-mer probabilities Disclaimer: This was a challenge problem set forth in Bioinformatics Algorithms An Active Learning Approach by Phillip Compeau and Pavel Pevzner (2018). I borrow heavily from their examples.
+The Problem What is the probability that a some k-mer will appear at least \(t\) times as a sub-string of a random string of length \(N\) composed of alphabet \(A\)?
+For example, what is the probability that some 9-mer appears 3 or more times in a random DNA string of length 500?">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.58.3" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta property="og:title" content="Estimating K-mer Probabilities">
+<meta property="og:description" content="Estimating k-mer probabilities Disclaimer: This was a challenge problem set forth in Bioinformatics Algorithms An Active Learning Approach by Phillip Compeau and Pavel Pevzner (2018). I borrow heavily from their examples.
+The Problem What is the probability that a some k-mer will appear at least \(t\) times as a sub-string of a random string of length \(N\) composed of alphabet \(A\)?
+For example, what is the probability that some 9-mer appears 3 or more times in a random DNA string of length 500?">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/2019/10/06/2019-10-06-estimating-k-mer-probabilities/">
+        <link rel="stylesheet" href="/dist/styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        
+        <script src="//yihui.name/js/math-code.js"></script>
+<script async
+src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+        
+    </head>
+    <body>
+        
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                            </h1>
+                        
+                        <a class="button-square" href="/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/jcalendo" rel="me">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="LinkedIn" title="LinkedIn" href="https://linkedin.com/in/gennaro-calendo/" rel="me">
+                                <i class="fa fa-linkedin"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Email" title="Email" href="mailto:jcalendo@gmail.com">
+                                <i class="fa fa-envelope"></i>
+                            </a>
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Contact" href="/page/contact/">Contact</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/page/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Estimating K-mer Probabilities</h1>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2019-10-06" itemprop="datePublished">Sun, Oct 6, 2019</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="https://schema.org/Person">
+            <span itemprop="name">
+                <a href="https://github.com/jcalendo" itemprop="url" rel="author">Gennaro Calendo</a>
+            </span>
+        </span>
+    </p>
+    
+        <p class="post-reading post-line">
+            <span>Estimated reading time: 6 min</span>
+        </p>
+    
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+
+<div id="estimating-k-mer-probabilities" class="section level1">
+<h1>Estimating k-mer probabilities</h1>
+<p>Disclaimer: This was a challenge problem set forth in <em>Bioinformatics Algorithms An Active Learning Approach</em> by Phillip Compeau and Pavel Pevzner (2018). I borrow heavily from their examples.</p>
+<div id="the-problem" class="section level2">
+<h2>The Problem</h2>
+<p>What is the probability that a some k-mer will appear at least <span class="math inline">\(t\)</span> times as a sub-string of a random string of length <span class="math inline">\(N\)</span> composed of alphabet <span class="math inline">\(A\)</span>?</p>
+<p>For example, what is the probability that some 9-mer appears 3 or more times in a random DNA string of length 500?</p>
+</div>
+<div id="a-warm-up-question---whats-the-probability-of-finding-a-given-pattern" class="section level2">
+<h2>A Warm up Question - what’s the probability of finding a given <span class="math inline">\(Pattern\)</span></h2>
+<p>Let <span class="math inline">\(Pr(N, A, Pattern, t)\)</span> denote the probability that a string <span class="math inline">\(Pattern\)</span> appears <span class="math inline">\(t\)</span> or more times in a random string of length <span class="math inline">\(N\)</span> formed by an alphabet of <span class="math inline">\(A\)</span> letters.</p>
+<p>For example, we can compute <span class="math inline">\(Pr(4, 2, &quot;01&quot;, 2)\)</span> by brute force as follows:</p>
+<pre class="python"><code>import itertools
+import fractions
+from numbers import Real
+
+
+def find_pattern_probability(N: int, A: str, pattern: str, t: int) -&gt; Real:
+    &quot;&quot;&quot;Find the probability of a given substring&quot;&quot;&quot;
+    possible_strings = itertools.product(A, repeat=N)
+    
+    k = len(pattern)
+    count = 0
+    n = 0
+    
+    for string in possible_strings:
+        s = &quot;&quot;.join(string)
+        n += 1
+        occurences = 0
+        for i in range(len(s)-k+1):
+            if s[i:i+k] == pattern:
+                occurences += 1
+        if occurences &gt;= t:
+            count += 1
+            
+    return fractions.Fraction(count, n)
+
+
+print(find_pattern_probability(N=4, A=&quot;01&quot;, pattern=&quot;01&quot;, t=2))</code></pre>
+<blockquote>
+<p>1/16</p>
+</blockquote>
+<p>However, this approach becomes computationally intractable as the alphabet and the string length increase. The number of possible strings is defined by the number of permutations with repetition which is, <span class="math inline">\(A^N\)</span> where <span class="math inline">\(A\)</span> is the alphabet size (in this case 2) and <span class="math inline">\(N\)</span> is the string length.</p>
+<p>For example, fixing the alphabet size at 2 results in the following number of unique combinations for each string length up to 100</p>
+<pre class="python"><code>import matplotlib.pyplot as plt
+import numpy as np
+plt.style.use(&#39;ggplot&#39;)
+%matplotlib inline
+
+
+A = 2                                           # alphabet size of binary string (&#39;0&#39;, &#39;1&#39;)
+N = np.array([range(2, 101)])                   # string length
+possible_strings = np.power(A, N, dtype=float)  # number of permutations with replacement for each length
+
+plt.scatter(N, possible_strings)
+plt.yscale(&#39;log&#39;)
+plt.xlabel(&#39;Length of string - N&#39;)
+plt.ylabel(&#39;Number of possible strings&#39;)
+plt.title(&quot;Number of Possible Binary Strings of String Length N&quot;)
+plt.show()</code></pre>
+<p><img src="/data/possible-strings.png" /></p>
+<p>This isn’t even the complete story. Another problem arises when we consider that certain combinations appear more frequently than others in a random string, i.e. the <strong>overlapping words problem</strong>. For example, <span class="math inline">\(Pr(4,2,&quot;01&quot;,2) = 1/16\)</span> whereas <span class="math inline">\(Pr(4,2,&quot;11&quot;,2) = 3/16\)</span> since two occurrences of “01” can never overlap each other in any 4-mer.</p>
+<p>Given the high number of possible strings and the fact that overlapping strings occur with different probabilities we need to instead estimate <span class="math inline">\(Pr(N, A, Pattern, t)\)</span>. We can estimate this value by assuming that each sub-string is non-overlapping and then imagine inserting the sub-string <span class="math inline">\(t\)</span> times within a string. For example, we can insert the sub-string “A” into “XXX” in the following ways:</p>
+<blockquote>
+<p>AXXX</p>
+<p>XAXX</p>
+<p>XXAX</p>
+<p>XXXA</p>
+</blockquote>
+<p>There are 4 ways to insert “A” into “XXX”. Because there are <span class="math inline">\(3^3 = 27\)</span> possible ternary 3-mers we can approximate the number of ternary 5-mers that contain at least one instance of “A” as <span class="math inline">\(4 \times 27 = 108\)</span>. And because there are <span class="math inline">\(3^5 = 243\)</span> possible ternary 5-mers we get the estimated <span class="math inline">\(Pr(5, 3, &quot;A&quot;, 1) = 108/243 = 4/9 \approx 44\%\)</span></p>
+<p>From Compeau and Pevzner (2018):</p>
+<blockquote>
+<p>If we select exactly <span class="math inline">\(t\)</span> of these occurrences, then we can think about <span class="math inline">\(Text\)</span> as a sequence of <span class="math inline">\(n = N - t * k\)</span> symbols interrupted by <span class="math inline">\(t\)</span> insertions of the k-mer <span class="math inline">\(Pattern\)</span>. If we fix these <span class="math inline">\(n\)</span> symbols, then we wish to count the number of different strings <span class="math inline">\(Text\)</span> that can be formed by inserting <span class="math inline">\(t\)</span> occurrences of <span class="math inline">\(Pattern\)</span> into a string formed by these <span class="math inline">\(n\)</span> symbols.”</p>
+</blockquote>
+<p>This means that the problem can get broken down into, “How many ways can we choose <span class="math inline">\(t\)</span> occurrences of a <span class="math inline">\(Pattern\)</span> in a string of length <span class="math inline">\(n = N - t * k\)</span>”. In other words, <span class="math inline">\(n\ Choose\ r\)</span>.</p>
+<p>Taken together we will have <span class="math inline">\(n + t\)</span> occurrences of “X”. From these occurrences we wish to choose <span class="math inline">\(t\)</span> placements. This gives us the binomial coefficient <span class="math inline">\(n +t \choose t\)</span>. Now we need to multiply this by the number of strings from an alphabet <span class="math inline">\(A\)</span> of length <span class="math inline">\(n\)</span> that we can insert <span class="math inline">\(t\)</span> occurrences, <span class="math inline">\(A^n\)</span>. Finally, divide by the total number of possible strings for an alphabet of size <span class="math inline">\(A\)</span> and length of <span class="math inline">\(N\)</span>. This yields our estimate:</p>
+<p><span class="math display">\[Pr(N, A, Pattern, t) \approx \frac{{n+t \choose t} A^n}{A^N} = \frac{{N - t * k + t \choose t} A^{N-t*k}}{A^N} = \frac{{N - t * (k - 1) \choose t}}{A^{t*k}}\]</span></p>
+<p>Now we are ready to develop an approximation</p>
+<pre class="python"><code>from scipy.special import binom
+
+
+def approximate_pattern_probability(N: int, A: int, pattern: str, t: int) -&gt; None:
+    &quot;&quot;&quot;Return the approximate probability of substring t in text of length N composed of A symbols&quot;&quot;&quot;
+    k = len(pattern)
+    numerator = int(binom(N - t * (k - 1), t))
+    denominator = int(A**(t*k))
+    frac = fractions.Fraction(numerator, denominator)
+    Pr = numerator / denominator
+    
+    print(f&quot;Approximate probability of {t} occurrences of {pattern} in text of length {N} composed of {A} symbols is {frac} or {Pr}&quot;)
+  
+  approximate_pattern_probability(30, 4, &quot;ACTAT&quot;, 3)</code></pre>
+<blockquote>
+<p>Approximate probability of 3 occurences of ACTAT in text of length 30 composed of 4 symbols is 51/67108864 or 7.599592208862305e-07</p>
+</blockquote>
+<p>This approximation is okay if we know the <span class="math inline">\(Pattern\)</span>. The original question was to approximate the probability of some k-mer appearing <span class="math inline">\(t\)</span> or more times.</p>
+<p>We already have an approximation for the probability <span class="math inline">\(p\)</span> that some <span class="math inline">\(Pattern\)</span> appears <span class="math inline">\(t\)</span> of more times, therefore 1 minus this approximation will give us the probability that the <span class="math inline">\(Pattern\)</span> does not appear <span class="math inline">\(t\)</span> or more times. Since we know that there are <span class="math inline">\(A^k\)</span> possible k-mer patterns, we can approximate the probability that all <span class="math inline">\(A^k\)</span> patterns appear fewer than <span class="math inline">\(t\)</span> times in a random string of length <span class="math inline">\(N\)</span> using <span class="math inline">\((1 - p)A^k\)</span>.</p>
+<p>Again, we can flip this probability by subtracting it from 1 in order to approximate the probability that some k-mer appears greater than <span class="math inline">\(t\)</span> times in a random string of length <span class="math inline">\(N\)</span>: <span class="math inline">\(Pr(N, A, k, t) \approx 1 - (1 - p)A^k\)</span>. Now we can get an estimate for the original question.</p>
+<p>Simply plugging this equation into a function will cause an overflow. Therefore we can approximate our estimate by assuming that <span class="math inline">\(p\)</span> is about the same for every <span class="math inline">\(Pattern\)</span>. Thus we get:</p>
+<p><span class="math display">\[Pr(N, A, k, t) \approx p * A^k\]</span></p>
+<pre class="python"><code>def approximate_kmer_probability(N: int, A: int, k: int, t: int) -&gt; None:
+    &quot;&quot;&quot;Return the approximate probability that some k-mer appears t or more times in a random string of length N
+    composed of alphabet size A&quot;&quot;&quot;
+    numerator = int(binom(N - t * (k - 1), t))
+    denominator = int(A**((t-1)*k))
+    frac = fractions.Fraction(numerator, denominator)
+    Pr = float(frac)
+    
+    print(f&quot;Approximate probability of  at least {t} occurrences of {k}-mer in text of length {N} composed of {A} symbols is {frac} or {Pr}&quot;)
+    
+approximate_kmer_probability(500, 4, 9, 3)</code></pre>
+<blockquote>
+<p>Approximate probability of at least 3 occurences of 9-mer in text of length 500 composed of 4 symbols is 4465475/17179869184 or 0.00025992485461756587</p>
+</blockquote>
+</div>
+<div id="the-approximate-probability" class="section level2">
+<h2>The Approximate Probability</h2>
+<p>To answer the question, the probability that some 9-mer appears 3 or more times in a random DNA string of length 500 should be about 0.000259 however, this number is actually closer to 0.000769 <span class="math inline">\(\approx 1/1300\)</span> due to the overlapping words problem (Compeau and Pevzner, 2018).</p>
+</div>
+</div>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+
+    <div class="share">
+        
+            <a class="icon-twitter" href="https://twitter.com/share?text=Estimating%20K-mer%20Probabilities&url=%2f2019%2f10%2f06%2f2019-10-06-estimating-k-mer-probabilities%2f"
+                onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                <i class="fa fa-twitter"></i>
+                <span class="hidden">Twitter</span>
+            </a>
+        
+
+        
+            <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=%2f2019%2f10%2f06%2f2019-10-06-estimating-k-mer-probabilities%2f"
+                onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                <i class="fa fa-facebook"></i>
+                <span class="hidden">Facebook</span>
+            </a>
+        
+
+        
+            <a class="icon-google-plus" href="https://plus.google.com/share?url=%2f2019%2f10%2f06%2f2019-10-06-estimating-k-mer-probabilities%2f"
+              onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+              <i class="fa fa-google-plus"></i>
+                <span class="hidden">Google+</span>
+            </a>
+        
+        
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2019 / Powered by <a href="https://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="/js/jquery-1.11.3.min.js"></script>
+        <script src="/js/jquery.fitvids.js"></script>
+        
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        
+        
+        <script src="/js/scripts.js"></script>
+    </body>
+</html>
+

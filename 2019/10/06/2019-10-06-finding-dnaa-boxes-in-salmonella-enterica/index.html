@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Finding DnaA Boxes in Salmonella Enterica &middot; Gennaro Calendo</title>
+        <meta name="description" content="I have been working through Bioinformatics Algorithms: An Active Learning Approach by Compeau and Pevzner and wanted to try out some of the Challenge Problems. This challenge problem is finding the DnaA boxes in Salmonella enterica.
+DnaA boxes are short segments within bacterial ori (origins of replication) which DnaA binds to. DnaA then instructs the cell to begin replication at that location. Get the sequence
+The first step in this problem is just getting the sequence.">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.58.3" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta property="og:title" content="Finding DnaA Boxes in Salmonella Enterica">
+<meta property="og:description" content="I have been working through Bioinformatics Algorithms: An Active Learning Approach by Compeau and Pevzner and wanted to try out some of the Challenge Problems. This challenge problem is finding the DnaA boxes in Salmonella enterica.
+DnaA boxes are short segments within bacterial ori (origins of replication) which DnaA binds to. DnaA then instructs the cell to begin replication at that location. Get the sequence
+The first step in this problem is just getting the sequence.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/2019/10/06/2019-10-06-finding-dnaa-boxes-in-salmonella-enterica/">
+        <link rel="stylesheet" href="/dist/styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        
+        <script src="//yihui.name/js/math-code.js"></script>
+<script async
+src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+        
+    </head>
+    <body>
+        
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                            </h1>
+                        
+                        <a class="button-square" href="/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/jcalendo" rel="me">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="LinkedIn" title="LinkedIn" href="https://linkedin.com/in/gennaro-calendo/" rel="me">
+                                <i class="fa fa-linkedin"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Email" title="Email" href="mailto:jcalendo@gmail.com">
+                                <i class="fa fa-envelope"></i>
+                            </a>
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Contact" href="/page/contact/">Contact</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/page/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Finding DnaA Boxes in Salmonella Enterica</h1>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2019-10-06" itemprop="datePublished">Sun, Oct 6, 2019</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="https://schema.org/Person">
+            <span itemprop="name">
+                <a href="https://github.com/jcalendo" itemprop="url" rel="author">Gennaro Calendo</a>
+            </span>
+        </span>
+    </p>
+    
+        <p class="post-reading post-line">
+            <span>Estimated reading time: 4 min</span>
+        </p>
+    
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+<p>I have been working through <em>Bioinformatics Algorithms: An Active Learning Approach</em> by Compeau and Pevzner and wanted to try out some of the Challenge Problems. This challenge problem is finding the DnaA boxes in <em>Salmonella enterica</em>.</p>
+
+<p>DnaA boxes are short segments within bacterial ori (origins of replication) which DnaA binds to. DnaA then instructs the cell to begin replication at that location.
+Get the sequence</p>
+
+<p>The first step in this problem is just getting the sequence. Biopython makes this easy enough if we know the NCBI accession number.</p>
+
+<pre><code class="language-python">from Bio import Entrez
+from Bio import SeqIO
+
+# Use the optional email parameter
+Entrez.email = &quot;jcalendo@gmail.com&quot;
+
+# retrieve the Salmonella Enterica record 
+handle = Entrez.efetch(db=&quot;nucleotide&quot;, id=&quot;AE006468.2&quot;, rettype=&quot;gb&quot;, retmode=&quot;text&quot;)
+
+# read into a SeqRecord
+record = SeqIO.read(handle, &quot;genbank&quot;)
+sequence = record.seq
+</code></pre>
+
+<p>Now that we have the entire <em>Salmonella enterica</em> sequence the next step is to approximate where the ori might be located and then verify the location by finding the DnaA boxes.
+Use skew to find an approximate location of ori</p>
+
+<p>Since DNA replication is asymetrical and must proceed 5’-3’, DNA synthesizes more quickly on the reverse half-strand but gets slowed down (remember Okazaki fragments?) on the forward half-strand. As a result, the forward half-strand spends more of its life as a single-stranded piece of DNA template. This is important because single stranded DNA is more prone to mutation than double-stranded DNA. It turns out that cytosine has a tendency to mutate to thymine. This is called deamination. Deamination results in mismatched base pairing. The end result is that the proportions of cytosine and guanine differ between the forward and reverse half-strands. We can use this information to find an approximate ori location.</p>
+
+<p>To accomplish this, we will traverse the sequence and keep a running total of the difference between the counts of G and C - the skew. If the difference starts increasing then we can infer that we are on the forward half-strand, if the difference starts decreasing we can guess that we are on the reverse half-strand.</p>
+
+<pre><code class="language-python">import matplotlib.pyplot as plt
+%matplotlib inline
+
+
+def compute_skew(sequence):
+    &quot;&quot;&quot;Compute the skew for a genome sequence&quot;&quot;&quot;
+    running_skew = []
+    skew = 0
+
+    for base in sequence.upper():
+        if base == &quot;G&quot;:
+            skew += 1
+        elif base == &quot;C&quot;:
+            skew -= 1
+        else:
+            skew += 0
+
+        running_skew.append(skew)
+
+    return running_skew
+
+skew_list = compute_skew(sequence)
+positions = [x for x in range(len(sequence))]
+
+# plot the skew
+plt.plot(positions, skew_list)
+plt.xlabel(&quot;Position&quot;)
+plt.ylabel(&quot;Skew&quot;)
+plt.show()
+</code></pre>
+
+<h3 id="skew-plot">Skew plot</h3>
+
+<p><img src="/data/output_4_0.png" alt="png" /></p>
+
+<p>The skew acheives a minimum where the reverse half-strand ends and the forward half-strand begins - this should be the location of the ori. We can find the exact location of this minimum by finding the index of the min value of skew_list in the positions list like so:</p>
+
+<pre><code class="language-python">ori_min = positions[min(skew_list)]
+ori_min
+</code></pre>
+
+<blockquote>
+<p>4841249</p>
+</blockquote>
+
+<p>The minimum is at index 4841249. The next step will be to extract a region of about 500 base pairs centered at this index and then search this region for DnaA boxes.
+Searching for DnaA boxes around the minimum</p>
+
+<p>We can now use regular string slicing operations on the sequence object from above to extract a 500 bp region centered at position 4841249.</p>
+
+<pre><code class="language-python">ori_seq = str(sequence[ori_min - 250 : ori_min + 250])
+ori_seq
+</code></pre>
+
+<p>The extracted region looks like this:</p>
+
+<blockquote>
+<p>GTTATGTTATCATTTGTACTCGTGTAACAGTACAAACGGCGGTATAACATGACCCAGCAT
+TCCCCTTATTCATCGGCTATCGCCGAACAACGTAATCAGGAGTGGCTTCGTTTTGTGGAG
+TTACTCCGTCAGGCATATGCAGAGGATCTGCATCTGCCTTTATTACAACTGATGCTTACG
+CCGGACGAGCGTGAAGCGCTGGGAACGCGCGTGCGCATTATTGAGGAGTTGTTGCGTGGC
+GAAATGAGCCAGCGCGAGTTGAAAACCGAGCTGGGGGCGGGCATCGCCACCATCACGCGC
+GGGTCAAACAGCCTGAAATCCGCGCCGGTTGAACTGCGTCATTGGCTTGAGAACGTACTG
+CTGAAAAACGCCTGATTTGCTCGTAGGCCGGATAAGGCGAAGCGGCCATCCGGCAACATC
+GCCGCGAAATGCCTGATGGCGCTGTGCTTATCAGGCTTACAATATAGCGCAAATAATTAT
+CGATACACCGCGTTATGAAA</p>
+</blockquote>
+
+<p>Now we need to find the DnaA boxes. Since we aren’t exactly sure what pattern we’re looking for, the idea is to slide a window along the length of the sequence of interest and keep a tally of the number of times each k-mer pattern appears as a substring within the sequence. Additionally, we don’t want to look for exact matches but instead want to allow for the possibility of some mismatches. This will allow us to look for new DnaA boxes even if we don’t know what the particular k-mer cooresponding to a DnaA box looks like in Salmonella enterica.</p>
+
+<h3 id="to-be-continued">To be continued&hellip;</h3>
+
+<p>We have a good idea of where the ori is located, now we an algorithm to find the DNA boxes in the extracted text.</p>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+
+    <div class="share">
+        
+            <a class="icon-twitter" href="https://twitter.com/share?text=Finding%20DnaA%20Boxes%20in%20Salmonella%20Enterica&url=%2f2019%2f10%2f06%2f2019-10-06-finding-dnaa-boxes-in-salmonella-enterica%2f"
+                onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                <i class="fa fa-twitter"></i>
+                <span class="hidden">Twitter</span>
+            </a>
+        
+
+        
+            <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=%2f2019%2f10%2f06%2f2019-10-06-finding-dnaa-boxes-in-salmonella-enterica%2f"
+                onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                <i class="fa fa-facebook"></i>
+                <span class="hidden">Facebook</span>
+            </a>
+        
+
+        
+            <a class="icon-google-plus" href="https://plus.google.com/share?url=%2f2019%2f10%2f06%2f2019-10-06-finding-dnaa-boxes-in-salmonella-enterica%2f"
+              onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+              <i class="fa fa-google-plus"></i>
+                <span class="hidden">Google+</span>
+            </a>
+        
+        
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="Gennaro Calendo&#39;s Blog" href="/">Gennaro Calendo&#39;s Blog</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2019 / Powered by <a href="https://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="/js/jquery-1.11.3.min.js"></script>
+        <script src="/js/jquery.fitvids.js"></script>
+        
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        
+        
+        <script src="/js/scripts.js"></script>
+    </body>
+</html>
+

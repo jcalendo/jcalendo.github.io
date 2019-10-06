@@ -22,6 +22,28 @@
     </item>
     
     <item>
+      <title>Estimating K-mer Probabilities</title>
+      <link>/2019/10/06/2019-10-06-estimating-k-mer-probabilities/</link>
+      <pubDate>Sun, 06 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/10/06/2019-10-06-estimating-k-mer-probabilities/</guid>
+      <description>Estimating k-mer probabilities Disclaimer: This was a challenge problem set forth in Bioinformatics Algorithms An Active Learning Approach by Phillip Compeau and Pavel Pevzner (2018). I borrow heavily from their examples.
+The Problem What is the probability that a some k-mer will appear at least \(t\) times as a sub-string of a random string of length \(N\) composed of alphabet \(A\)?
+For example, what is the probability that some 9-mer appears 3 or more times in a random DNA string of length 500?</description>
+    </item>
+    
+    <item>
+      <title>Finding DnaA Boxes in Salmonella Enterica</title>
+      <link>/2019/10/06/2019-10-06-finding-dnaa-boxes-in-salmonella-enterica/</link>
+      <pubDate>Sun, 06 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/10/06/2019-10-06-finding-dnaa-boxes-in-salmonella-enterica/</guid>
+      <description>I have been working through Bioinformatics Algorithms: An Active Learning Approach by Compeau and Pevzner and wanted to try out some of the Challenge Problems. This challenge problem is finding the DnaA boxes in Salmonella enterica.
+DnaA boxes are short segments within bacterial ori (origins of replication) which DnaA binds to. DnaA then instructs the cell to begin replication at that location. Get the sequence
+The first step in this problem is just getting the sequence.</description>
+    </item>
+    
+    <item>
       <title>About</title>
       <link>/page/about/</link>
       <pubDate>Fri, 03 Apr 2015 02:13:50 +0000</pubDate>
